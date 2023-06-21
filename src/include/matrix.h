@@ -33,6 +33,10 @@ void matrix_free(Matrix **pp);
 
 int matrix_cross_product(const Matrix* a, const Matrix* b, Matrix* out);
 
+int matrix_get_minor_matrix(const Matrix *in, int mrow, int mcol, Matrix *out);
+
+int matrix_get_minors(const Matrix *in, Matrix *out);
+
 double matrix_get_value(const Matrix *p, int row, int col);
 
 void matrix_load_by_column(Matrix *m, double in[]);

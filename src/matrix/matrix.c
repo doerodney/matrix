@@ -68,6 +68,20 @@ int matrix_cross_product(const Matrix* a, const Matrix* b, Matrix* out) {
   return failure;
 }
 
+
+// Matrix destructor:
+void matrix_free(Matrix **pp) {
+  Matrix *pm = *pp;
+  if (pm) {   
+    // Free struct storage:
+    free((void*) *pp);
+
+    // Set pointer to NULL:
+    *pp = NULL;
+  }
+}
+
+
 // Calculate the determinant of a matrix:
 int matrix_get_determinant(const Matrix* m, double *det) {
   int failure = MATRIX_NO_ERR;
@@ -110,16 +124,99 @@ int matrix_get_determinant(const Matrix* m, double *det) {
 }
 
 
-// Matrix destructor:
-void matrix_free(Matrix **pp) {
-  Matrix *pm = *pp;
-  if (pm) {   
-    // Free struct storage:
-    free((void*) *pp);
+// Get the minor matrix for a given row, col:
+int matrix_get_minor_matrix(const Matrix *in, int mrow, int mcol, Matrix *out) {
+  int failure = MATRIX_NO_ERR;
 
-    // Set pointer to NULL:
-    *pp = NULL;
+  // Test for null pointers in arguments:
+  if ((NULL == in) || (NULL == out)) {
+    failure = MATRIX_NULL_POINTER;
   }
+  // Test if in and out matrix are the correct size:
+  else if (((in->nrows - out->nrows) != 1) || ((in->ncols - out->ncols) != 1)) {
+    failure = MATRIX_INCOMPATIBLE;
+  } 
+  // Test if in and out are square: 
+  else if ((in->ncols == 0) || (in->nrows == 0) || 
+           (in->ncols != in->nrows) || 
+           (out->ncols != out->nrows)) {
+    failure = MATRIX_DATA_NOT_SQUARE;
+  } else {
+      int i = 0;
+      double data[out->nrows * out->ncols];
+
+      // Collect the minor matrix for (mrow, mcol):
+      for (int row = 0; row < in->nrows; row++) {
+        for (int col = 0; col < in->nrows; col++) {
+          if ((row != mrow) && (col != mcol)) {
+            data[i] = matrix_get_value(in, row, col);
+            i++;
+          }
+        }
+      }
+
+      // Load the data into the out matrix:
+      matrix_load_by_row(out, data);
+  }
+
+  return failure;
+}
+
+
+// Get the matrix of minors of a square matrix:
+int matrix_get_minors(const Matrix *in, Matrix *out) {
+  int failure = MATRIX_NO_ERR;
+
+  // Test for null pointers in arguments:
+  if ((NULL == in) || (NULL == out)) {
+    failure = MATRIX_NULL_POINTER;
+  }
+  // Test if in and out matrix are the same size:
+  else if ((in->nrows != out->nrows) || (in->ncols != out->ncols)) {
+    failure = MATRIX_INCOMPATIBLE;
+  } 
+  // Test if in and out are square: 
+  else if ((in->ncols == 0) || (in->ncols != in->nrows)) {
+    failure = MATRIX_DATA_NOT_SQUARE;
+  } 
+  else {
+
+    // Create a minor matrix:
+    Matrix *minor = matrix_new((in->nrows - 1), (in->ncols - 1));
+    double data[in->nrows * in->ncols];
+    double det = 0.0;
+    int i = 0;
+    
+    // Calculate a minor value for each position in the in matrix:
+    for (int mrow = 0; mrow < in->nrows; mrow++) {
+      for (int mcol = 0; mcol < in->ncols && !failure; mcol++) {
+        i = 0;
+
+        // Collect the minor matrix for (row, col):
+        for (int row = 0; row < in->nrows; row++) {
+          for (int col = 0; col < in->nrows && !failure; col++) {
+            if ((row != mrow) && (col != mcol)) {
+              data[i] = matrix_get_value(in, row, col);
+              i++;
+            }
+          }
+        }
+        
+        // Get the determinant of the minor:
+        matrix_load_by_row(minor, data);
+        failure = matrix_get_determinant(minor, &det);
+
+        if (!failure) {
+          matrix_set_value(out, mrow, mcol, det);
+        }
+      }
+    }
+
+    // Free the minor matrix:
+    matrix_free(&minor);
+
+  }
+  return failure;
 }
 
 

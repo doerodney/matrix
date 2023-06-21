@@ -1,4 +1,5 @@
 #include <gtest.h>
+#include <stdio.h>
 extern "C" {
 #include "matrix.h"
 }
@@ -94,6 +95,58 @@ TEST(MatrixTest, DeterminantOfValidMatrix) {
   matrix_free(&a);
   EXPECT_EQ(a, nullptr);
 }
+
+TEST(MatrixTest, GetMinorMatrix_happy_path) {
+  const int nrows = 3, ncols = 3;
+  Matrix *in = matrix_new(nrows, ncols);
+  Matrix *out = matrix_new(nrows - 1, ncols - 1);
+  double data[] = {3, 0, 2, 2, 0, -2, 0, 1, 1};
+  int i = 0;
+
+  matrix_load_by_row(in, data);
+  int failure = matrix_get_minor_matrix(in, 0, 0, out);
+  double value = 0.0;
+  
+  EXPECT_EQ(failure, MATRIX_NO_ERR);
+  double nw_results[] = {0, -2, 1, 1};
+  for (int row = 0; row < out->nrows; row++) {
+    for (int col = 0; col < out->ncols; col++) {
+      value = matrix_get_value(out, row, col);
+      EXPECT_DOUBLE_EQ(value, nw_results[i++]); 
+    }
+  }
+}
+
+
+/*---
+TEST(MatrixTest, GetMinors_happy_path) {
+  const int nrows = 3, ncols = 3;
+  Matrix *in = matrix_new(nrows, ncols);
+  Matrix *out = matrix_new(nrows, ncols);
+
+  double data[] = {3, 0, 2, 2, 0, -2, 0, 1, 1};
+  double minors[] = {2, 2, 2, -2, 3, 3, 0, -10, 0};
+  int i = 0;
+
+  matrix_load_by_row(in, data);
+
+  int failure = matrix_get_minors(in, out);
+  EXPECT_EQ(failure, MATRIX_NO_ERR);
+
+  for (int row = 0; row < nrows; row++) {
+    for (int col = 0; col < ncols; col++) {
+      double observed = matrix_get_value(out, row, col);
+      double expected = minors[i];
+      i++;
+      printf("observed, expected = %g, %g\n", observed, expected);
+      EXPECT_DOUBLE_EQ(expected, observed);
+    }
+  }
+
+  matrix_free(&in);
+  matrix_free(&out);
+}
+---*/
 
 
 TEST(MatrixTest, SolveSimultaneousEquations) {
