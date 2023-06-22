@@ -75,7 +75,29 @@ TEST(MatrixTest, DeterminantOfEmptyMatrix) {
 }
 
 
-TEST(MatrixTest, DeterminantOfValidMatrix) {
+TEST(MatrixTest, DeterminantOfValid2DMatrix) {
+  double det = 0.0;
+  const int nrows = 2, ncols = 2;
+  const double data[] = {6, 1, 1, 4};
+  double target = 23;
+
+  Matrix *a = matrix_new(nrows, ncols);
+  for (int row = 0, i = 0; row < nrows; row++) {
+    for (int col = 0; col < ncols; col++) {
+      matrix_set_value(a, row, col, data[i++]);
+    }
+  }
+
+  int failure = matrix_get_determinant(a, &det);
+  EXPECT_EQ(failure, MATRIX_NO_ERR);
+  EXPECT_DOUBLE_EQ(det, target);
+
+  matrix_free(&a);
+  EXPECT_EQ(a, nullptr);
+} 
+
+
+TEST(MatrixTest, DeterminantOfValid3DMatrix) {
   double det = 0.0;
   const int nrows = 3, ncols = 3;
   const double data[] = {6, 1, 1, 4, -2, 5, 2, 8, 7};
@@ -96,7 +118,7 @@ TEST(MatrixTest, DeterminantOfValidMatrix) {
   EXPECT_EQ(a, nullptr);
 }
 
-TEST(MatrixTest, GetMinorMatrix_happy_path) {
+TEST(MatrixTest, GetMinorMatrixHappyPath) {
   const int nrows = 3, ncols = 3;
   Matrix *in = matrix_new(nrows, ncols);
   Matrix *out = matrix_new(nrows - 1, ncols - 1);
@@ -118,8 +140,8 @@ TEST(MatrixTest, GetMinorMatrix_happy_path) {
 }
 
 
-/*---
-TEST(MatrixTest, GetMinors_happy_path) {
+
+TEST(MatrixTest, GetMinorsHappyPath) {
   const int nrows = 3, ncols = 3;
   Matrix *in = matrix_new(nrows, ncols);
   Matrix *out = matrix_new(nrows, ncols);
@@ -138,7 +160,6 @@ TEST(MatrixTest, GetMinors_happy_path) {
       double observed = matrix_get_value(out, row, col);
       double expected = minors[i];
       i++;
-      printf("observed, expected = %g, %g\n", observed, expected);
       EXPECT_DOUBLE_EQ(expected, observed);
     }
   }
@@ -146,7 +167,7 @@ TEST(MatrixTest, GetMinors_happy_path) {
   matrix_free(&in);
   matrix_free(&out);
 }
----*/
+
 
 
 TEST(MatrixTest, SolveSimultaneousEquations) {

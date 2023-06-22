@@ -1,4 +1,5 @@
 #include <math.h> //NAN
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "matrix.h"
@@ -8,6 +9,7 @@ int fixColumnIndex(const Matrix *m, int idx);
 void getColumnContent(Matrix *dest, const Matrix *src, int col);
 void getRowContent(Matrix *dest, const Matrix *src, int row);
 int getDatumIndex(const Matrix *m, int row, int col);
+void printMatrix(const Matrix *m);
 void setColumnContent(Matrix *dest, const Matrix *src, int col);
 
 
@@ -40,6 +42,7 @@ Matrix* matrix_copy(const Matrix* src)
 
   return dest;
 }
+
 
 // Calculate cross-product of two vectors, represented as 1 x 3 matrices:
 int matrix_cross_product(const Matrix* a, const Matrix* b, Matrix* out) {
@@ -95,26 +98,34 @@ int matrix_get_determinant(const Matrix* m, double *det) {
     // Continue if the matrix has data and is square:
     *det = 0.0;
 
-    // Apply the sum of the left->right diagonals:
-    for (col = 0; col < m->ncols; col++) {
-      diag = 1.0;
-      for (row = 0; row < m->nrows; row++) {
-        fixed = fixColumnIndex(m, col + row);
-        value = matrix_get_value(m, row, fixed);
-        diag *= value;
-      }
-      *det += diag;
-    }
+    // Temporary hack for 2x2 matrix:
+    if (m->nrows == 2) {
+      *det = (matrix_get_value(m, 0, 0) * matrix_get_value(m, 1, 1) -
+          matrix_get_value(m, 0, 1) * matrix_get_value(m, 1, 0));
 
-    // Apply the sum of the right->left diagonals:
-    for (col = m->ncols - 1; col >= 0; col--) {
-      diag = 1.0;
-      for (row = 0; row < m->nrows; row++) {
-        fixed = fixColumnIndex(m, col - row);
-        value = matrix_get_value(m, row, fixed);
-        diag *= value;
+    } else {
+
+      // Apply the sum of the left->right diagonals:
+      for (col = 0; col < m->ncols; col++) {
+        diag = 1.0;
+        for (row = 0; row < m->nrows; row++) {
+          fixed = fixColumnIndex(m, col + row);
+          value = matrix_get_value(m, row, fixed);
+          diag *= value;
+        }
+        *det += diag;
       }
-      *det -= diag;
+
+      // Apply the sum of the right->left diagonals:
+      for (col = m->ncols - 1; col >= 0; col--) {
+        diag = 1.0;
+        for (row = 0; row < m->nrows; row++) {
+          fixed = fixColumnIndex(m, col - row);
+          value = matrix_get_value(m, row, fixed);
+          diag *= value;
+        }
+        *det -= diag;
+      }
     }
   } else {
     failure = MATRIX_DATA_NOT_SQUARE;
@@ -183,28 +194,18 @@ int matrix_get_minors(const Matrix *in, Matrix *out) {
 
     // Create a minor matrix:
     Matrix *minor = matrix_new((in->nrows - 1), (in->ncols - 1));
-    double data[in->nrows * in->ncols];
     double det = 0.0;
-    int i = 0;
+    int mrow, mcol;
     
     // Calculate a minor value for each position in the in matrix:
-    for (int mrow = 0; mrow < in->nrows; mrow++) {
-      for (int mcol = 0; mcol < in->ncols && !failure; mcol++) {
-        i = 0;
+    for (mrow = 0; mrow < in->nrows; mrow++) {
+      for (mcol = 0; mcol < in->ncols && !failure; mcol++) {
 
-        // Collect the minor matrix for (row, col):
-        for (int row = 0; row < in->nrows; row++) {
-          for (int col = 0; col < in->nrows && !failure; col++) {
-            if ((row != mrow) && (col != mcol)) {
-              data[i] = matrix_get_value(in, row, col);
-              i++;
-            }
-          }
+        failure = matrix_get_minor_matrix(in, mrow, mcol, minor);
+        if (!failure) {
+          // Get the determinant of the minor:
+          failure = matrix_get_determinant(minor, &det);
         }
-        
-        // Get the determinant of the minor:
-        matrix_load_by_row(minor, data);
-        failure = matrix_get_determinant(minor, &det);
 
         if (!failure) {
           matrix_set_value(out, mrow, mcol, det);
@@ -428,5 +429,16 @@ void setColumnContent(Matrix *dest, const Matrix *src, int col) {
   for (int row = 0; row < dest->nrows; row++) {
     double value = matrix_get_value(src, row, 0);
     matrix_set_value(dest, row, col, value);
+  }
+}
+
+
+void printMatrix(const Matrix *m) {
+  for (int row = 0; row < m->nrows; row++) {
+    for (int col = 0; col < m->ncols; col++) {
+      double value = matrix_get_value(m, row, col);
+      printf("%10.2g", value);
+    }
+    printf("\n");
   }
 }
