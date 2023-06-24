@@ -134,6 +134,67 @@ int matrix_get_determinant(const Matrix* m, double *det) {
   return failure;
 }
 
+// Calculate the determinant of a matrix:
+int matrix_get_det(const Matrix* m, double *det) {
+  int failure = MATRIX_NO_ERR;
+  double diag, value = 0;
+  int col, row, fixed = 0;
+  // Test for null pointers in arguments:
+  if ((NULL == m) || (NULL == det)) {
+    failure = MATRIX_NULL_POINTER;
+  } else if ((m->nrows != m->ncols) || (m->nrows == 0) || (m->ncols == 0)){
+    failure = MATRIX_DATA_NOT_SQUARE;
+  } else {
+    // Create an augmented matrix:
+    int naug_cols = ((2 * m->ncols) - 1);
+    Matrix* aug = matrix_new(m->nrows, naug_cols);
+    Matrix *content = matrix_new(m->nrows, 1);
+    int src_col = 0;
+    
+    // Copy the original matrix into the augmented matrix:
+    for (row = 0; row < m->nrows; row++) {
+      for (col = 0; col < m->ncols; col++) {
+        value = matrix_get_value(m, row, col);
+        matrix_set_value(aug, row, col, value);
+      }
+    }
+
+    // Load original matrix columns into the augmented matrix columns:
+    for (col = m->ncols; col < naug_cols; col++) {
+      getColumnContent(content, m, src_col);
+      setColumnContent(aug, content, col);
+      src_col++;
+    }
+
+    // Calculate sum of left-to-right diagonals in the augmented matrix:
+    *det = 0.0;
+    diag = 1.0;
+    for (col = 0; col < m->ncols; col++) {
+      diag = 1.0;
+      for (row = 0; row < m->nrows; row++) {
+        value = matrix_get_value(aug, row, col + row);
+        diag *= value;
+      }
+      *det += diag;
+    }
+
+    // Calculate sum of the right-to-left diagonals in the augmented matrix:
+    for (col = (m->ncols - 1); col < naug_cols; col++){
+      diag = 1.0;
+      for (row = 0; row < m->nrows; row++) {
+        value = matrix_get_value(aug, row, col - row);
+        diag *= value;
+      }
+      *det -= diag;
+    }
+
+    matrix_free(&aug);
+    matrix_free(&content);
+  }
+
+  return failure;
+}
+
 
 // Get the minor matrix for a given row, col:
 int matrix_get_minor_matrix(const Matrix *in, int mrow, int mcol, Matrix *out) {
