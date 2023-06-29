@@ -94,11 +94,14 @@ int matrix_get_determinant(const Matrix* m, double *det) {
   // Test for null pointers in arguments:
   if ((NULL == m) || (NULL == det)) {
     failure = MATRIX_NULL_POINTER;
-  } else if ((m->ncols > 0) && (m->ncols == m->nrows)) {
+  } else if ((m->ncols == 0) || (m->nrows == 0) || (m->ncols != m->nrows)) {
+    failure = MATRIX_DATA_NOT_SQUARE;
+  } else {
+
     // Continue if the matrix has data and is square:
     *det = 0.0;
 
-    // Temporary hack for 2x2 matrix:
+    // Special treatment for 2x2 matrix:
     if (m->nrows == 2) {
       *det = (matrix_get_value(m, 0, 0) * matrix_get_value(m, 1, 1) -
           matrix_get_value(m, 0, 1) * matrix_get_value(m, 1, 0));
@@ -127,10 +130,8 @@ int matrix_get_determinant(const Matrix* m, double *det) {
         *det -= diag;
       }
     }
-  } else {
-    failure = MATRIX_DATA_NOT_SQUARE;
-  }
-
+  } 
+  
   return failure;
 }
 
