@@ -13,15 +13,18 @@
 #define MATRIX_INVALID_ROW_COUNT 7
 #define MATRIX_SINGULAR 8
 #define MATRIX_INCOMPATIBLE 9
+#define MATRIX_BUF_INSUFFICIENT 10
 
 typedef struct {
   int nrows;
   int ncols;
+  double *buf;
   double data[];
+  
 
 } Matrix;
 
-
+int matrix_init(Matrix* m, int nrows, int ncols, double *buf, int nDataElements);
 
 Matrix* matrix_new(int nrows, int ncols);
 

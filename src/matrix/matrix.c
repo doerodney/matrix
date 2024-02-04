@@ -10,6 +10,26 @@ void getRowContent(Matrix *dest, const Matrix *src, int row);
 int getDatumIndex(const Matrix *m, int row, int col);
 void setColumnContent(Matrix *dest, const Matrix *src, int col);
 
+// Matrix initializer - no memory allocation.
+int matrix_init(Matrix* m, int nrows, int ncols, double *buf, int nDataElements) {
+  int failure = MATRIX_NO_ERR;
+  if (m) {
+      if (nDataElements < (nrows * ncols)) {
+          failure = MATRIX_BUF_INSUFFICIENT;
+      } else {
+          m->nrows = nrows;
+          m->ncols = ncols;
+          m->buf = buf;
+      }
+
+  }
+  else { 
+      failure = MATRIX_NULL_POINTER;
+  }  
+
+  return failure;
+}
+
 
 // Matrix constructor:
 Matrix* matrix_new(int nrows, int ncols) {
