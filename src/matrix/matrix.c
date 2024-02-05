@@ -21,7 +21,6 @@ int matrix_init(Matrix* m, int nrows, int ncols, double *buf, int nDataElements)
           m->ncols = ncols;
           m->buf = buf;
       }
-
   }
   else { 
       failure = MATRIX_NULL_POINTER;

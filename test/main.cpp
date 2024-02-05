@@ -6,21 +6,27 @@ extern "C" {
 
 TEST(MatrixTest, DetectSingularity) {
   int isSingular = 0;
-  const int nrows = 3, ncols = 3;
+  const int nrows = 3;
+  const int ncols = 3;
+  double buf[nrows * ncols];
   double data[] = {0, 0, 0, 1, 1, 1, 2, 2, 2};
+  
+  // Matrix *a = matrix_new(nrows, ncols);
+  Matrix a;
+  int failure = matrix_init(&a, nrows, ncols, buf, MATRIX_BUF_ELEMENTS(buf));
+  EXPECT_EQ(failure, MATRIX_NO_ERR);
 
-  Matrix *a = matrix_new(nrows, ncols);
   for (int row = 0, i = 0; row < nrows; row++) {
     for (int col = 0; col < ncols; col++) {
-      matrix_set_value(a, row, col, data[i++]);
+      matrix_set_value(&a, row, col, data[i++]);
     }
   }
 
-  isSingular = matrix_test_singular(a);
+  isSingular = matrix_test_singular(&a);
   EXPECT_TRUE(isSingular);
 
-  matrix_free(&a);
-  EXPECT_EQ(a, nullptr);
+  // matrix_free(&a);
+  // EXPECT_EQ(a, nullptr);
 }
 
 

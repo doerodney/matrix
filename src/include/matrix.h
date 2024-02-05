@@ -15,6 +15,8 @@
 #define MATRIX_INCOMPATIBLE 9
 #define MATRIX_BUF_INSUFFICIENT 10
 
+#define MATRIX_BUF_ELEMENTS(buf) (sizeof(buf) / sizeof(buf[0]))
+
 typedef struct {
   int nrows;
   int ncols;
